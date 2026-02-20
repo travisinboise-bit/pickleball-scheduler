@@ -496,6 +496,7 @@
       const serveCounts = new Map(allPlayers.map((p) => [p, 0]));
       const receiveCounts = new Map(allPlayers.map((p) => [p, 0]));
       const courtCounts = new Map(allPlayers.map((p) => [p, new Map()]));
+      const courtOrder = new Map(courtNames.map((name, idx) => [name, idx]));
       const satLastRound = new Set();
 
       const roundsOut = [];
@@ -548,6 +549,7 @@
           });
         }
 
+        gamesOut.sort((a, b) => (courtOrder.get(a.court) ?? 9999) - (courtOrder.get(b.court) ?? 9999));
         roundsOut.push({ round: r, sitters, games: gamesOut });
       }
 
