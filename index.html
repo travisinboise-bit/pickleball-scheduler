@@ -151,7 +151,7 @@
     </details>
 
     <details open>
-      <summary>Leaderboard (Points Scored / Points Allowed)</summary>
+      <summary>Leaderboard (Wins, Point Differential, Total Points Scored)</summary>
       <div class="btns">
         <button class="primary" id="finalizeRankingsBtn" type="button">Finalize Rankings</button>
       </div>
@@ -686,7 +686,7 @@
     }
 
     function computeLeaderboard(schedule) {
-      const stats = new Map(schedule.players.map((p) => [p, { scored: 0, allowed: 0, games: 0 }]));
+      const stats = new Map(schedule.players.map((p) => [p, { wins: 0, scored: 0, allowed: 0, games: 0 }]));
 
       for (const round of schedule.rounds) {
         for (const game of round.games) {
@@ -700,29 +700,33 @@
             row.scored += s;
             row.allowed += r;
             row.games += 1;
+            if (s > r) row.wins += 1;
           }
           for (const p of game.receive) {
             const row = stats.get(p);
             row.scored += r;
             row.allowed += s;
             row.games += 1;
+            if (r > s) row.wins += 1;
           }
         }
       }
 
       const ranked = Array.from(stats.entries()).map(([name, row]) => {
-        const ratio = row.allowed === 0 ? (row.scored > 0 ? Infinity : 0) : row.scored / row.allowed;
+        const pointDiff = row.scored - row.allowed;
         return {
           name,
+          wins: row.wins,
           scored: row.scored,
           allowed: row.allowed,
+          pointDiff,
           games: row.games,
-          ratio,
         };
       });
 
       ranked.sort((a, b) => {
-        if (a.ratio !== b.ratio) return b.ratio - a.ratio;
+        if (a.wins !== b.wins) return b.wins - a.wins;
+        if (a.pointDiff !== b.pointDiff) return b.pointDiff - a.pointDiff;
         if (a.scored !== b.scored) return b.scored - a.scored;
         return a.name.localeCompare(b.name);
       });
@@ -774,18 +778,18 @@
 
       const ranked = computeLeaderboard(schedule);
       const table = document.createElement("table");
-      table.innerHTML = "<thead><tr><th>Rank</th><th>Player</th><th>Games</th><th>Points Scored</th><th>Points Allowed</th><th>Scored/Allowed</th></tr></thead>";
+      table.innerHTML = "<thead><tr><th>Rank</th><th>Player</th><th>Wins</th><th>Point Diff</th><th>Total Points Scored</th><th>Points Allowed</th><th>Games</th></tr></thead>";
       const tbody = document.createElement("tbody");
 
       ranked.forEach((r, idx) => {
         const tr = document.createElement("tr");
-        const ratioText = Number.isFinite(r.ratio) ? r.ratio.toFixed(3) : "INF";
         tr.innerHTML = "<td>" + (idx + 1) + "</td>"
           + "<td>" + r.name + "</td>"
-          + "<td>" + r.games + "</td>"
+          + "<td class=\"leader-good\">" + r.wins + "</td>"
+          + "<td>" + r.pointDiff + "</td>"
           + "<td>" + r.scored + "</td>"
           + "<td>" + r.allowed + "</td>"
-          + "<td class=\"leader-good\">" + ratioText + "</td>";
+          + "<td>" + r.games + "</td>";
         tbody.appendChild(tr);
       });
 
