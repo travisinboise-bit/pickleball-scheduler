@@ -88,13 +88,105 @@
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .status-ok { color: #86efac; font-weight: 700; }
     .status-warn { color: #fbbf24; font-weight: 700; }
+
+    @media print {
+      :root {
+        --ink: #111111;
+        --line: #444444;
+      }
+
+      @page {
+        size: letter portrait;
+        margin: 0.5in;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #111111 !important;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        font-size: 11pt;
+      }
+
+      .wrap {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .no-print,
+      #warnings,
+      #leaderboardSection {
+        display: none !important;
+      }
+
+      .card,
+      details {
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 0 14pt !important;
+      }
+
+      summary {
+        list-style: none;
+        font-size: 14pt;
+        font-weight: 800;
+        margin: 0 0 8pt;
+      }
+
+      .round-sheet {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin: 0 0 14pt;
+      }
+
+      h1 {
+        margin: 0 0 10pt;
+        font-size: 18pt;
+      }
+
+      h3 {
+        margin: 0 0 6pt;
+        font-size: 13pt;
+      }
+
+      table {
+        margin-top: 6pt;
+      }
+
+      th,
+      td {
+        border: 1px solid #444444;
+        background: transparent !important;
+        color: #111111 !important;
+        padding: 7pt 6pt;
+        font-size: 10.5pt;
+      }
+
+      .tag {
+        border: 1px solid #444444;
+        color: #111111 !important;
+        background: transparent !important;
+      }
+
+      input.score-input {
+        width: 62pt;
+        min-height: 22pt;
+        border: 1px solid #444444 !important;
+        background: #ffffff !important;
+        color: #111111 !important;
+        border-radius: 0;
+        padding: 0 4pt;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Pickleball Round Robin Scheduler</h1>
 
-    <div class="card">
+    <div class="card no-print">
       <div class="grid two">
         <div>
           <label for="playerCount">Number of players</label>
@@ -140,6 +232,7 @@
       <div class="btns">
         <button class="primary" id="generateBtn" type="button">Generate Schedule</button>
         <button class="secondary" id="downloadBtn" type="button">Download HTML</button>
+        <button class="secondary" id="printBtn" type="button">Print Sheets</button>
       </div>
 
       <div id="warnings" class="warnings"></div>
@@ -150,7 +243,7 @@
       <div id="scheduleOut"></div>
     </details>
 
-    <details open>
+    <details open id="leaderboardSection">
       <summary>Leaderboard (Wins, Point Differential, Total Points Scored)</summary>
       <div class="btns">
         <button class="primary" id="finalizeRankingsBtn" type="button">Finalize Rankings</button>
@@ -613,6 +706,7 @@
       for (let r = 0; r < schedule.rounds.length; r++) {
         const round = schedule.rounds[r];
         const sec = document.createElement("section");
+        sec.className = "round-sheet";
         sec.style.marginBottom = "14px";
 
         const h = document.createElement("h3");
@@ -888,6 +982,9 @@
 
     document.getElementById("generateBtn").addEventListener("click", runGenerate);
     document.getElementById("downloadBtn").addEventListener("click", downloadHTML);
+    document.getElementById("printBtn").addEventListener("click", function () {
+      window.print();
+    });
     document.getElementById("finalizeRankingsBtn").addEventListener("click", function () {
       if (!window.currentSchedule) return;
       window.finalizeRequested = true;
