@@ -88,6 +88,11 @@
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .status-ok { color: #86efac; font-weight: 700; }
     .status-warn { color: #fbbf24; font-weight: 700; }
+    .hidden { display: none !important; }
+    .mode-btn.active {
+      background: linear-gradient(180deg, #22c55e, #16a34a);
+      color: #05240f;
+    }
 
     @media print {
       :root {
@@ -115,7 +120,10 @@
 
       .no-print,
       #warnings,
-      #leaderboardSection {
+      #leaderboardSection,
+      #leaguePanel,
+      #modePanel,
+      #leagueStandingsSection {
         display: none !important;
       }
 
@@ -202,7 +210,7 @@
           <input id="roundCount" type="number" min="1" value="5" />
         </div>
         <div>
-          <label for="seed">Random seed (optional)</label>
+          <label for="seed">Week #</label>
           <input id="seed" type="text" placeholder="FridayMix" />
         </div>
       </div>
@@ -780,7 +788,7 @@
     }
 
     function computeLeaderboard(schedule) {
-      const stats = new Map(schedule.players.map((p) => [p, { wins: 0, scored: 0, allowed: 0, games: 0 }]));
+      const stats = new Map(schedule.players.map((p) => [p, { wins: 0, losses: 0, scored: 0, allowed: 0, games: 0 }]));
 
       for (const round of schedule.rounds) {
         for (const game of round.games) {
@@ -795,6 +803,7 @@
             row.allowed += r;
             row.games += 1;
             if (s > r) row.wins += 1;
+            if (r > s) row.losses += 1;
           }
           for (const p of game.receive) {
             const row = stats.get(p);
@@ -802,6 +811,7 @@
             row.allowed += s;
             row.games += 1;
             if (r > s) row.wins += 1;
+            if (s > r) row.losses += 1;
           }
         }
       }
@@ -811,6 +821,7 @@
         return {
           name,
           wins: row.wins,
+          losses: row.losses,
           scored: row.scored,
           allowed: row.allowed,
           pointDiff,
@@ -872,7 +883,7 @@
 
       const ranked = computeLeaderboard(schedule);
       const table = document.createElement("table");
-      table.innerHTML = "<thead><tr><th>Rank</th><th>Player</th><th>Wins</th><th>Point Diff</th><th>Total Points Scored</th><th>Points Allowed</th><th>Games</th></tr></thead>";
+      table.innerHTML = "<thead><tr><th>Rank</th><th>Player</th><th>Wins</th><th>Losses</th><th>Point Diff</th><th>Total Points Scored</th><th>Points Allowed</th><th>Games</th></tr></thead>";
       const tbody = document.createElement("tbody");
 
       ranked.forEach((r, idx) => {
@@ -880,6 +891,7 @@
         tr.innerHTML = "<td>" + (idx + 1) + "</td>"
           + "<td>" + r.name + "</td>"
           + "<td class=\"leader-good\">" + r.wins + "</td>"
+          + "<td>" + r.losses + "</td>"
           + "<td>" + r.pointDiff + "</td>"
           + "<td>" + r.scored + "</td>"
           + "<td>" + r.allowed + "</td>"
@@ -979,7 +991,6 @@
     document.getElementById("clearNames").addEventListener("click", function () {
       document.getElementById("playerNames").value = "";
     });
-
     document.getElementById("generateBtn").addEventListener("click", runGenerate);
     document.getElementById("downloadBtn").addEventListener("click", downloadHTML);
     document.getElementById("printBtn").addEventListener("click", function () {
@@ -996,7 +1007,6 @@
         document.getElementById("rankOut").innerHTML = '<div class="hint">Final rankings are waiting for all game scores.</div>';
       }
     });
-
     window.finalizeRequested = false;
     createCourtInputs();
     runGenerate();
